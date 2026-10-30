@@ -1,0 +1,20 @@
+[
+  {
+    "title": "Tracking a parcel",
+    "content": "Use the tracking reference from the dispatch message to track your parcel. A newly created reference may take a day to become available.",
+    "source": "fictional-parcel-guide",
+    "category": "delivery"
+  },
+  {
+    "title": "Resetting a demo account password",
+    "content": "Choose Reset password on the sign-in page. The demo sends a reset link that expires after fifteen minutes. Never share the link with another person.",
+    "source": "fictional-account-guide",
+    "category": "accounts"
+  },
+  {
+    "title": "Changing a delivery address",
+    "content": "A delivery address can be changed before the parcel is dispatched. After dispatch, contact the carrier to check available delivery options.",
+    "source": "fictional-delivery-guide",
+    "category": "delivery"
+  }
+]
