@@ -19,6 +19,9 @@ from .store import DuplicateDocument, InvalidQuery, StaleVersion, Store
 
 
 Category = Literal["general", "accounts", "billing", "delivery"]
+SearchMode = Literal["any", "all"]
+SQLITE_MAX_INT = 2**63 - 1
+DocumentID = Annotated[int, Field(gt=0, le=SQLITE_MAX_INT)]
 
 
 @dataclass(frozen=True)
@@ -53,7 +56,7 @@ class DocumentInput(BaseModel):
 
 
 class DocumentUpdate(DocumentInput):
-    expected_version: int = Field(gt=0)
+    expected_version: int = Field(gt=0, le=SQLITE_MAX_INT)
 
 
 class Document(DocumentInput):
@@ -82,6 +85,7 @@ class SearchHit(BaseModel):
 
 class SearchResults(BaseModel):
     query: str
+    mode: SearchMode
     items: list[SearchHit]
 
 
@@ -124,7 +128,7 @@ def create_app(settings: Settings | None = None):
         store.initialize()
         yield
 
-    app = FastAPI(title="Support Knowledge Base API", version="0.2.0", lifespan=lifespan,
+    app = FastAPI(title="Support Knowledge Base API", version="0.3.0", lifespan=lifespan,
                   description="Maintain support guides and find source excerpts. No generated answers.")
     app.add_middleware(BodyLimit)
     header = APIKeyHeader(name="X-API-Key", auto_error=False)
@@ -165,14 +169,14 @@ def create_app(settings: Settings | None = None):
         return store.list(limit, offset, category)
 
     @app.get("/documents/{document_id}", response_model=Document, dependencies=protected, tags=["documents"])
-    def get_document(document_id: Annotated[int, Field(gt=0)]):
+    def get_document(document_id: DocumentID):
         result = store.get(document_id)
         if result is None:
             raise HTTPException(404, "Document not found.")
         return result
 
     @app.put("/documents/{document_id}", response_model=Document, dependencies=protected, tags=["documents"])
-    def update_document(document_id: Annotated[int, Field(gt=0)], document: DocumentUpdate):
+    def update_document(document_id: DocumentID, document: DocumentUpdate):
         try:
             result = store.update(document_id, **document.model_dump())
         except StaleVersion:
@@ -184,16 +188,16 @@ def create_app(settings: Settings | None = None):
         return result
 
     @app.delete("/documents/{document_id}", status_code=204, dependencies=protected, tags=["documents"])
-    def delete_document(document_id: Annotated[int, Field(gt=0)]):
+    def delete_document(document_id: DocumentID):
         if not store.delete(document_id):
             raise HTTPException(404, "Document not found.")
         return Response(status_code=204)
 
     @app.get("/search", response_model=SearchResults, dependencies=protected, tags=["search"])
     def search(q: str = Query(min_length=1, max_length=200), limit: int = Query(10, ge=1, le=50),
-               category: Category | None = None):
+               category: Category | None = None, mode: SearchMode = "any"):
         try:
-            return {"query": q, "items": store.search(q, limit, category)}
+            return {"query": q, "mode": mode, "items": store.search(q, limit, category, mode)}
         except InvalidQuery as exc:
             raise HTTPException(422, str(exc)) from None
 

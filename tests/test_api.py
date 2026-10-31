@@ -94,16 +94,16 @@ def test_and_search_title_weight_and_no_match(client):
     a = client.post("/documents", json=DOC).json()
     b = client.post("/documents", json={"title": "Reference", "content": "parcel tracking",
                                       "source": "fictional"}).json()
-    hits = client.get("/search", params={"q": "parcel tracking"}).json()["items"]
+    hits = client.get("/search", params={"q": "parcel tracking", "mode": "all"}).json()["items"]
     assert {h["id"] for h in hits} == {a["id"], b["id"]}
     assert hits[0]["id"] == a["id"]
-    assert client.get("/search?q=parcel+nonexistent").json()["items"] == []
+    assert client.get("/search?q=parcel+nonexistent&mode=all").json()["items"] == []
 
 
 def test_queries_are_literal_not_sql_or_fts_commands(client):
     client.post("/documents", json=DOC)
     for q in ['"', "parcel OR nonexistent", "parcel' UNION SELECT 1 --", "title:parcel"]:
-        r = client.get("/search", params={"q": q})
+        r = client.get("/search", params={"q": q, "mode": "all"})
         assert r.status_code in (200, 422)
         if r.status_code == 200:
             assert r.json()["items"] == []
@@ -253,4 +253,56 @@ def test_legacy_schema_upgrade_preserves_content_and_search(tmp_path):
     assert store.search("parcel", 10)[0]["id"] == 1
     store.update(1, 1, **(DOC | {"content": "replacement"}))
     assert store.search("parcel", 10)  # title still matches
-    assert store.search("tracking reference", 10) == []
+    assert store.search("tracking reference", 10, mode="all") == []
+
+
+@pytest.mark.parametrize("value", [2**63, 10**100])
+@pytest.mark.parametrize("method", ["GET", "PUT", "DELETE"])
+def test_out_of_range_document_ids_are_validation_errors(client, value, method):
+    kwargs = {"json": DOC | {"expected_version": 1}} if method == "PUT" else {}
+    assert client.request(method, f"/documents/{value}", **kwargs).status_code == 422
+
+
+@pytest.mark.parametrize("value", [2**63, 10**100])
+def test_out_of_range_versions_are_validation_errors(client, value):
+    doc = client.post("/documents", json=DOC).json()
+    r = client.put(f"/documents/{doc['id']}", json=DOC | {"expected_version": value})
+    assert r.status_code == 422
+    assert client.get(f"/documents/{doc['id']}").json()["version"] == 1
+
+
+def test_maximum_sqlite_id_does_not_crash(client):
+    for method in ["GET", "DELETE", "PUT"]:
+        kwargs = {"json": DOC | {"expected_version": 1}} if method == "PUT" else {}
+        assert client.request(method, f"/documents/{2**63-1}", **kwargs).status_code == 404
+
+
+def test_any_search_finds_partial_matches_but_all_stays_precise(client):
+    client.post("/documents", json=DOC)
+    any_result = client.get("/search?q=parcel+nonexistent").json()
+    assert any_result["mode"] == "any" and len(any_result["items"]) == 1
+    assert client.get("/search?q=parcel+nonexistent&mode=all").json()["items"] == []
+
+
+def test_support_question_regressions_on_fictional_guides(client):
+    import json
+    examples = Path(__file__).parents[1] / "examples/documents.json"
+    for doc in json.loads(examples.read_text()):
+        client.post("/documents", json=doc)
+    for query, category, title in [
+        ("forgot password", "accounts", "Resetting a demo account password"),
+        ("How do I track my parcel?", "delivery", "Tracking a parcel"),
+        ("change my delivery address", "delivery", "Changing a delivery address"),
+    ]:
+        hits = client.get("/search", params={"q": query, "category": category}).json()["items"]
+        assert hits and hits[0]["title"] == title
+    assert client.get("/search?q=unknownword").json()["items"] == []
+
+
+@pytest.mark.parametrize("query", ["how do I", "!!!", "   "])
+def test_queries_without_content_words_are_rejected(client, query):
+    assert client.get("/search", params={"q": query}).status_code == 422
+
+
+def test_invalid_search_mode_is_rejected(client):
+    assert client.get("/search?q=parcel&mode=unexpected").status_code == 422

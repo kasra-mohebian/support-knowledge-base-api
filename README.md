@@ -2,7 +2,7 @@
 
 **Keep support guides searchable, current and safe from conflicting edits.**
 
-![Conceptual illustration of account, delivery and billing guides flowing through a database into a source excerpt](docs/media/knowledge-base-overview.png)
+![Conceptual illustration of support guide cards, a search lens and editing pencils](docs/media/knowledge-base-overview-v2.png)
 
 *AI-generated concept illustration, not a screenshot of the application.*
 
@@ -26,6 +26,10 @@ Later, the delivery policy changes. One editor saves the correction. A second ed
 | Avoid duplicate submissions | Database-enforced uniqueness, including concurrent writes |
 | Remove an obsolete guide | Document and search entry deleted in one transaction |
 | Inspect or integrate the API | Typed JSON responses and interactive OpenAPI docs |
+
+![Illustrated lifecycle: create a guide, find a passage, save a correction and reject a stale edit](docs/media/support-workflow.svg)
+
+*An illustrated API workflow using fictional content; not an application screenshot.*
 
 ## How it fits together
 
@@ -73,6 +77,7 @@ An abbreviated result:
 ```json
 {
   "query": "tracking reference",
+  "mode": "any",
   "items": [
     {
       "id": 1,
@@ -99,7 +104,7 @@ The database defaults to `var/documents.sqlite3`; set `DOCSEARCH_DB` to use anot
 | `GET` | `/documents/{id}` | Read a guide and its current version |
 | `PUT` | `/documents/{id}` | Replace a guide using `expected_version` |
 | `DELETE` | `/documents/{id}` | Remove a guide and its live search entry |
-| `GET` | `/search` | Search with `q`, optional `category` and `limit` |
+| `GET` | `/search` | Search with `q`, optional `category`, `mode` and `limit` |
 | `GET` | `/docs` | Explore the OpenAPI contract interactively |
 
 Example create request:
@@ -137,10 +142,15 @@ The version check and update are a single conditional SQL statement. Index trigg
 ## Search and validation
 
 - Search uses BM25 with title matches weighted more heavily. Lower `rank` sorts first; the score is not a confidence percentage.
-- Query words are literal and combined with **AND**. There are no user-supplied FTS operators, synonyms, semantic matching or generated answers.
+- Default `mode=any` accepts a match on any remaining query word, so `forgot password` can find a password guide without requiring the word “forgot” to appear. Use `mode=all` to require every remaining word.
+- A small, explicit English stopword list removes common question words and pronouns such as “how”, “do”, “I” and “my”. Word matches stay literal: there is no synonym expansion, semantic model or user-controlled FTS syntax. Queries without a content word get `422`.
 - Duplicate detection compares the trimmed title, content and source. A different category alone does not make an identical guide distinct.
 - Limits: 200 characters for title/source/query, 16,000 for content, 50 results per page and 64 KiB per write request.
 - Errors: `401` invalid key, `404` missing guide, `409` duplicate/stale edit, `413` oversized body, `422` invalid input and `503` unavailable storage.
+
+The included fictional guides are regression-tested with `forgot password`, `How do I track my parcel?` and `change my delivery address`. These are small functional checks, not a benchmark of general search quality. Any-word matching can also return weaker matches; narrow the category or choose `mode=all` when needed.
+
+Document IDs and edit versions must fit SQLite’s positive signed 64-bit range; larger values are rejected as input errors.
 
 Excerpts and labels are plain text. Clients should render them as text, not HTML. A search match does not prove the underlying guide is correct.
 
@@ -151,7 +161,7 @@ python -m pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
-**31 test cases** cover the lifecycle, access control, validation, category filters, duplicate races, conflicting edits, index updates, persistence and legacy schema upgrades. Tests use temporary databases and need no network access. A GitHub Actions workflow runs the suite on Python 3.12.
+**46 test cases** cover the lifecycle, access control, validation, category filters, duplicate races, conflicting edits, index updates, persistence and legacy schema upgrades. Tests use temporary databases and need no network access. A GitHub Actions workflow runs the suite on Python 3.12.
 
 ```text
 src/docsearch/main.py    HTTP contract, validation and access control

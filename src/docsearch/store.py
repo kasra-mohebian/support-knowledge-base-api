@@ -146,13 +146,21 @@ class Store:
         with self.connect() as con:
             return con.execute("DELETE FROM documents WHERE id=?", (document_id,)).rowcount == 1
 
-    def search(self, query: str, limit: int, category: str | None = None):
+    def search(self, query: str, limit: int, category: str | None = None, mode: str = "any"):
         # Do not expose FTS operators or interpret SQL supplied by the caller.
-        # unicode61 handles document tokenization; these literal words are ANDed.
-        words = re.findall(r"[^\W_]+", query, flags=re.UNICODE)
+        # Small, explicit English stopword set for ordinary support questions.
+        # This is lexical retrieval, not semantic understanding or query rewriting.
+        stopwords = {"a", "an", "the", "i", "my", "me", "we", "our", "you", "your",
+                     "how", "do", "does", "can", "could", "is", "are", "to", "of", "in", "for"}
+        words = list(dict.fromkeys(re.findall(r"[^\W_]+", query.lower(), flags=re.UNICODE)))
         if not words:
             raise InvalidQuery("Query must contain a letter or number.")
-        expression = " AND ".join('"' + w + '"' for w in words)
+        words = [w for w in words if w not in stopwords]
+        if not words:
+            raise InvalidQuery("Include a content word, such as password or delivery.")
+        if mode not in {"any", "all"}:
+            raise InvalidQuery("Search mode must be any or all.")
+        expression = (" OR " if mode == "any" else " AND ").join('"' + w + '"' for w in words)
         with self.connect() as con:
             rows = con.execute("""
                 SELECT d.id, d.title, d.source, d.category, d.version,
