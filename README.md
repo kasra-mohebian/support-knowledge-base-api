@@ -2,9 +2,9 @@
 
 **Keep support guides searchable, current and safe from conflicting edits.**
 
-![Conceptual illustration of support guide cards, a search lens and editing pencils](docs/media/knowledge-base-overview-v2.png)
+![Technical concept illustration of API validation, transactional storage, the FTS index and version checks; not an application screenshot.](docs/media/knowledge-base-technical.png)
 
-*AI-generated concept illustration, not a screenshot of the application.*
+*Technical concept illustration of API validation, transactional storage, the FTS index and version checks; not an application screenshot.*
 
 A small Python backend for a support guide library. Store instructions for account access, billing and delivery, then find relevant passages with their sources. When a guide changes, update it without silently overwriting another editor's work.
 

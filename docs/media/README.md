@@ -1,19 +1,15 @@
-# Project illustration
+# Technical project illustration
 
-`knowledge-base-overview.png` is a conceptual cover generated using the built-in image generation tool. It is not a screenshot, architecture specification or measured result.
+`knowledge-base-technical.png` was generated with the built-in OpenAI image-generation tool in Codex. It is conceptual artwork, not a screenshot, measured chart, hardware photograph or a figure taken from a paper or teaching material.
 
-It depicts account, delivery and billing guides flowing through a database into a source excerpt. Generation prompt:
+Technical concept illustration of API validation, transactional storage, the FTS index and version checks; not an application screenshot.
 
-> Use case: stylized-concept. Asset type: wide GitHub README cover illustration for a small Python support knowledge base backend. Create a refined, clear editorial 3D cut-paper/isometric illustration: a tidy group of document cards with simple account, delivery-box and invoice icons flowing into a compact database cylinder and emerging as one highlighted source excerpt under a magnifying glass. Visually show stored guides becoming findable, source-backed information. Warm ivory backdrop, restrained deep teal and amber accents, soft shadows, crisp geometry, generous breathing room, composition legible at small sizes. Wide landscape approximately 2:1. No people, no logos, no university symbols, no screenshots, no charts, no AI robot, no text, no letters, no numbers, no watermarks. It is a conceptual illustration, not an architecture diagram or product UI.
+The image follows the restrictive terms in LICENSE for original explanatory material, to the extent rights exist and are held. No exclusive rights are asserted in legally unprotectable material; third-party rights are unaffected.
 
-The repository's [rights notice](../../LICENSE) applies only to the extent rights are legally held; it does not assert exclusive rights in unprotectable AI-generated material.
+## Technical diagram
 
-## Revised cover and workflow
+`support-workflow.svg`: The original code-drawn workflow shows request validation, transactional document/index updates and conflicting edits, using fictional examples. The same original-material terms apply.
 
-`knowledge-base-overview-v2.png` is the revised AI-generated cover used by the README. It emphasizes practical guide search and editing. The original cover remains in this folder as an earlier asset.
+## Generation prompt
 
-Revised cover prompt (built-in image generation tool):
-
-> Use case: stylized-concept. Create a beautiful wide editorial illustration for a Python support knowledge base project README. A friendly but precise cut-paper 3D scene showing three tangible guide cards (parcel box, account key, invoice) arranged on a warm ivory desk-like plane, a teal search lens revealing a highlighted excerpt card, and two small amber and teal edit pencils beside layered revision cards showing that edits preserve a clear current version. Composition should tell the practical story of finding and maintaining support guides, rather than a generic glowing database. Restrained deep teal, warm amber, cream palette, tactile paper grain, soft realistic shadows, crisp shapes, spacious and polished, legible when small, approximately 2:1 landscape. No people, no letters, no numbers, no logos, no university branding, no text, no UI screenshot, no performance charts, no watermarks. Conceptual artwork, not evidence or an architecture diagram.
-
-`support-workflow.svg` is an original code-drawn explanatory diagram of the documented API lifecycle. Its examples are fictional; it is not a screenshot or a measured result. The repository rights notice applies to this diagram to the extent rights are held.
+> Create a sophisticated, richly detailed technical editorial illustration for a GitHub engineering portfolio, wide landscape about 2:1. Precision cutaway / scientific magazine visual language, deep navy objects, teal data paths, restrained amber highlights, pale neutral backdrop and subtle drafting grid. Strong visual hierarchy, small meaningful engineering details. Not a cute generic concept graphic. No people, logos, university marks, watermarks, fabricated result numbers, data charts or fake application screenshots. Use only the exact short labels requested. Depict the actual internal support knowledge-base backend, not an AI chatbot. A keyed HTTP request packet enters a validation gate, passes into a clean API service module, and then reaches SQLite document storage and a distinct FTS index enclosed together in a transaction boundary. Magnify a source excerpt with document ID/version as abstract slots rather than numbers. Lower detailed inset: two editing requests aimed at the same original revision; one becomes the current revision and the stale request is stopped by a version-check barrier while the saved record remains intact. Depict guide categories as small account-key, invoice and parcel motifs embedded in the document rows. No cloud AI, neural network, user-role system, invented dashboards or model-generated answers. Exact labels only: 'API KEY', 'VALIDATION', 'SQLITE', 'FTS INDEX', 'TRANSACTION', 'VERSION CHECK'.
