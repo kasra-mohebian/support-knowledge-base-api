@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import re
 import sqlite3
+import unicodedata
 from typing import Annotated, Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Response
@@ -50,8 +51,11 @@ class DocumentInput(BaseModel):
     @classmethod
     def clean_text(cls, value):
         value = value.strip()
-        if not value or any(ord(c) < 32 and c not in "\n\t\r" for c in value):
-            raise ValueError("Use non-empty text without control characters.")
+        if not value or not any(not c.isspace() and unicodedata.category(c) not in {"Cc", "Cf"}
+                                for c in value):
+            raise ValueError("Include text beyond whitespace or invisible formatting characters.")
+        if any(unicodedata.category(c) == "Cc" and c not in "\n\t\r" for c in value):
+            raise ValueError("Control characters are not allowed except newline, tab and carriage return.")
         return value
 
 

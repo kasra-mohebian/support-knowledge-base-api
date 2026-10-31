@@ -2,9 +2,9 @@
 
 **Keep support guides searchable, current and safe from conflicting edits.**
 
-![Technical concept illustration of API validation, transactional storage, the FTS index and version checks; not an application screenshot.](docs/media/knowledge-base-technical.png)
+![Designed view of actual API responses from fictional demo guides; not a frontend screenshot.](docs/media/knowledge-base-preview.png)
 
-*Technical concept illustration of API validation, transactional storage, the FTS index and version checks; not an application screenshot.*
+*Designed view of actual API responses from fictional demo guides; not a frontend screenshot.*
 
 A small Python backend for a support guide library. Store instructions for account access, billing and delivery, then find relevant passages with their sources. When a guide changes, update it without silently overwriting another editor's work.
 
@@ -145,10 +145,12 @@ The version check and update are a single conditional SQL statement. Index trigg
 - Default `mode=any` accepts a match on any remaining query word, so `forgot password` can find a password guide without requiring the word “forgot” to appear. Use `mode=all` to require every remaining word.
 - A small, explicit English stopword list removes common question words and pronouns such as “how”, “do”, “I” and “my”. Word matches stay literal: there is no synonym expansion, semantic model or user-controlled FTS syntax. Queries without a content word get `422`.
 - Duplicate detection compares the trimmed title, content and source. A different category alone does not make an identical guide distinct.
-- Limits: 200 characters for title/source/query, 16,000 for content, 50 results per page and 64 KiB per write request.
+- Limits: 200 characters for title/source/query, 16,000 for content, 50 results per page, an offset up to 100,000, and 64 KiB per write request.
 - Errors: `401` invalid key, `404` missing guide, `409` duplicate/stale edit, `413` oversized body, `422` invalid input and `503` unavailable storage.
 
 The included fictional guides are regression-tested with `forgot password`, `How do I track my parcel?` and `change my delivery address`. These are small functional checks, not a benchmark of general search quality. Any-word matching can also return weaker matches; narrow the category or choose `mode=all` when needed.
+
+Document text rejects Unicode control characters except newline, tab and carriage return. Invisible formatting alone is not accepted as text; formatting inside meaningful text, including the Persian half-space, is preserved.
 
 Document IDs and edit versions must fit SQLite’s positive signed 64-bit range; larger values are rejected as input errors.
 
@@ -161,7 +163,7 @@ python -m pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
-**46 test cases** cover the lifecycle, access control, validation, category filters, duplicate races, conflicting edits, index updates, persistence and legacy schema upgrades. Tests use temporary databases and need no network access. A GitHub Actions workflow runs the suite on Python 3.12.
+**63 test cases** cover the lifecycle, access control, validation, category filters, duplicate races, conflicting edits, index updates, persistence and legacy schema upgrades. Tests use temporary databases and need no network access. A GitHub Actions workflow runs the suite on Python 3.12.
 
 ```text
 src/docsearch/main.py    HTTP contract, validation and access control
@@ -177,7 +179,7 @@ This is a local portfolio backend, not a hosted support platform. SQLite keeps s
 
 One API key has full access. There are no user accounts, role permissions, rate limits, TLS termination, encryption at rest, backup service or general-purpose migration framework. The total corpus is not capped. Keep the documented server on loopback; internet deployment needs additional work. Back up the database with the service stopped before an upgrade. See [SECURITY.md](SECURITY.md), including the limits of deletion from database files and backups.
 
-The implementation was developed with AI assistance. The illustration is also AI-generated. No teaching materials, original notebooks, third-party datasets or model weights are included, and no performance benchmark is claimed.
+The implementation was developed with AI assistance. The preview arranges actual API responses from fictional demo guides in an original layout. No teaching materials, original notebooks, third-party datasets or model weights are included, and no performance benchmark is claimed.
 
 ## Usage rights and references
 

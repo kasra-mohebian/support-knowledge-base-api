@@ -57,4 +57,4 @@ A successful deletion returns `204` with no response body. The guide disappears 
 - **Triggers rather than separate API-side index writes:** content and search updates share one transaction, including rollbacks.
 - **An API key rather than a user system:** sufficient for the documented local demo; it offers neither per-person accountability nor separate editor/reader permissions.
 
-Before using this as a resume project, run the walkthrough yourself, inspect the SQL and tests, and be able to explain these tradeoffs. The repository was developed with AI assistance; understanding and maintaining it are separate from having working code.
+These tradeoffs define the scope of the implementation: a small local service with explicit consistency checks and a simple deployment model.

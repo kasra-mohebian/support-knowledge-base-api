@@ -306,3 +306,32 @@ def test_queries_without_content_words_are_rejected(client, query):
 
 def test_invalid_search_mode_is_rejected(client):
     assert client.get("/search?q=parcel&mode=unexpected").status_code == 422
+
+
+@pytest.mark.parametrize("field", ["title", "content", "source"])
+@pytest.mark.parametrize("control", ["\x7f", "\x80", "\x85", "\x9f"])
+def test_unicode_control_characters_are_rejected(client, field, control):
+    response = client.post("/documents", json=DOC | {field: "a" + control + "b"})
+    assert response.status_code == 422
+    assert client.get("/documents").json()["total"] == 0
+
+
+@pytest.mark.parametrize("field", ["title", "content", "source"])
+def test_invisible_formatting_alone_is_not_document_text(client, field):
+    assert client.post("/documents", json=DOC | {field: " \u200b\u200c "}).status_code == 422
+
+
+def test_persian_half_space_and_multiline_content_are_preserved(client):
+    doc = {"title": "راهنمای حساب‌های کاربری", "content": "می‌توانید رمز را بازنشانی کنید.\nخط دوم\tنمونه\r\nپایان",
+           "source": "راهنمای ساختگی"}
+    response = client.post("/documents", json=doc)
+    assert response.status_code == 201
+    assert response.json()["title"] == doc["title"]
+    assert response.json()["content"] == doc["content"]
+
+
+def test_different_category_alone_does_not_create_a_distinct_document(client):
+    assert client.post("/documents", json=DOC | {"category": "delivery"}).status_code == 201
+    assert client.post("/documents", json=DOC | {"category": "accounts"}).status_code == 409
+    page = client.get("/documents").json()
+    assert page["total"] == 1 and page["items"][0]["category"] == "delivery"
