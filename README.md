@@ -2,9 +2,9 @@
 
 **Keep support guides searchable, current and safe from conflicting edits.**
 
-![Designed view of actual API responses from fictional demo guides; not a frontend screenshot.](docs/media/knowledge-base-preview.png)
+![From a support question to a matching guide and a safe update; fictional API example.](docs/media/knowledge-base-preview.png)
 
-*Designed view of actual API responses from fictional demo guides; not a frontend screenshot.*
+*From a support question to a matching guide and a safe update; fictional API example.*
 
 A small Python backend for a support guide library. Store instructions for account access, billing and delivery, then find relevant passages with their sources. When a guide changes, update it without silently overwriting another editor's work.
 
